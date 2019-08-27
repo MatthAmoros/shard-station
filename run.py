@@ -6,6 +6,7 @@ Get message, behave, answer
 """
 #!/usr/bin/env python
 import pika
+import json
 
 queue_name = 'shard'
 connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
@@ -14,7 +15,8 @@ channel = connection.channel()
 channel.queue_declare(queue=queue_name)
 
 def callback(ch, method, properties, body):
-	print(" [x] Received %r" % body)
+	message = json.loads(body)
+	print(body)
 
 channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
 
