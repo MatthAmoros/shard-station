@@ -8,6 +8,7 @@ Get message, behave, answer
 import pika
 import json
 from instance.config import RABBITMQ_SERVER, RABBITMQ_QUEUE_NAME, RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD
+from lib.printer.zebra.zebra import Zebra
 
 """ Initialize connection """
 credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
@@ -23,8 +24,12 @@ channel.queue_declare(queue=RABBITMQ_QUEUE_NAME)
 
 def callback(ch, method, properties, body):
 	message = json.loads(body)
+
+	printer = Zebra("Zebra01", "192.168.2.150", 9100)
+	printer.send()
+
 	channel.basic_ack(method.delivery_tag)
-	print(body)
+	print("Message sent.")
 
 channel.basic_consume(queue=RABBITMQ_QUEUE_NAME, on_message_callback=callback, auto_ack=False)
 

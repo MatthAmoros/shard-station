@@ -24,6 +24,7 @@ class Zebra(Printer):
 					'PRODUCT' : 'FRUTA GRANEL'}
 
 	def send(self):
+		print('Sending label to : ' + str(self.ip_address) + ':' + str(self.port) + ' ...')
 		with open(self.PATH_TO_LABEL, 'r') as content_file:
 			with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 				content = content_file.read()
