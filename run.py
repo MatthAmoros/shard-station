@@ -27,8 +27,11 @@ def callback(ch, method, properties, body):
 	message['parameters'] = json.loads(message['parameters'])
 
 	printer = Zebra("Zebra01", "192.168.2.150", 9100)
+
+	""" Bind label properties """
 	printer.set_property("ID", message['parameters']['code'])
 	printer.set_property("ORIGIN", message['parameters']['location_origin']['name'])
+
 	printer.send()
 
 	channel.basic_ack(method.delivery_tag)
