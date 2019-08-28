@@ -35,6 +35,9 @@ class Zebra(Printer):
 
 		print('Sent')
 
+	def set_property(self, key, value):
+		self.REPLACE_LIST[key] = value
+
 	def replace_tags(self, content, value_list):
 		pattern = re.compile(r"""<(?P<name>.*?)>""", re.VERBOSE)
 		matches = pattern.findall(content)
