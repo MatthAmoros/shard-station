@@ -7,18 +7,25 @@ Get message, behave, answer
 #!/usr/bin/env python
 import pika
 import json
+from instance.config import RABBITMQ_SERVER, RABBITMQ_QUEUE_NAME, RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD
 
-queue_name = 'shard'
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+""" Initialize connection """
+credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
+parameters = pika.ConnectionParameters(RABBITMQ_SERVER,
+										RABBITMQ_PORT,
+										'/',
+										credentials)
+
+connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 
-channel.queue_declare(queue=queue_name)
+channel.queue_declare(queue=RABBITMQ_QUEUE_NAME)
 
 def callback(ch, method, properties, body):
 	message = json.loads(body)
 	print(body)
 
-channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+channel.basic_consume(queue=RABBITMQ_QUEUE_NAME, on_message_callback=callback, auto_ack=True)
 
-print(" [*] Waiting for messages from queue '" + queue_name + "'. To exit press CTRL+C ")
+print(" [*] Waiting for messages from queue '" + RABBITMQ_QUEUE_NAME + "'. To exit press CTRL+C ")
 channel.start_consuming()
