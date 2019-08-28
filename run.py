@@ -23,9 +23,10 @@ channel.queue_declare(queue=RABBITMQ_QUEUE_NAME)
 
 def callback(ch, method, properties, body):
 	message = json.loads(body)
+	channel.basic_ack(method.delivery_tag)
 	print(body)
 
-channel.basic_consume(queue=RABBITMQ_QUEUE_NAME, on_message_callback=callback, auto_ack=True)
+channel.basic_consume(queue=RABBITMQ_QUEUE_NAME, on_message_callback=callback, auto_ack=False)
 
 print(" [*] Waiting for messages from queue '" + RABBITMQ_QUEUE_NAME + "'. To exit press CTRL+C ")
 channel.start_consuming()
