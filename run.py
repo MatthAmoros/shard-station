@@ -7,7 +7,7 @@ Get message, behave, answer
 #!/usr/bin/env python
 import pika
 import json
-from instance.config import RABBITMQ_SERVER, RABBITMQ_QUEUE_NAME, RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD
+from instance.config import RABBITMQ_SERVER, RABBITMQ_QUEUE_NAME, RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD, STATION_ID
 from lib.printer.zebra.zebra import Zebra
 
 """ Initialize connection """
@@ -17,27 +17,32 @@ parameters = pika.ConnectionParameters(RABBITMQ_SERVER,
 										'/',
 										credentials)
 
-connection = pika.BlockingConnection(parameters)
-channel = connection.channel()
+try:
+	connection = pika.BlockingConnection(parameters)
+	channel = connection.channel()
 
-channel.queue_declare(queue=RABBITMQ_QUEUE_NAME)
+	channel.queue_declare(queue=RABBITMQ_QUEUE_NAME)
 
-def callback(ch, method, properties, body):
-	message = json.loads(body)
-	message['parameters'] = json.loads(message['parameters'])
+	def callback(ch, method, properties, body):
+		message = json.loads(body)
 
-	printer = Zebra("Zebra01", "192.168.2.150", 9100)
+		if 'target' in message and message['target'] == STATION_ID:
+			message['parameters'] = json.loads(message['parameters'])
 
-	""" Bind label properties """
-	printer.set_property("ID", message['parameters']['code'])
-	printer.set_property("ORIGIN", message['parameters']['location_origin']['name'])
+			printer = Zebra("Zebra01", "192.168.2.150", 9100)
 
-	printer.send()
+			""" Bind label properties """
+			printer.set_property("ID", message['parameters']['code'])
+			printer.set_property("ORIGIN", message['parameters']['location_origin']['name'])
 
-	channel.basic_ack(method.delivery_tag)
-	print("Message sent.")
+			printer.send()
 
-channel.basic_consume(queue=RABBITMQ_QUEUE_NAME, on_message_callback=callback, auto_ack=False)
+			channel.basic_ack(method.delivery_tag)
+			print("Message sent.")
 
-print(" [*] Waiting for messages from queue '" + RABBITMQ_QUEUE_NAME + "'. To exit press CTRL+C ")
-channel.start_consuming()
+	channel.basic_consume(queue=RABBITMQ_QUEUE_NAME, on_message_callback=callback, auto_ack=False)
+
+	print(" [*] Waiting for messages from queue '" + RABBITMQ_QUEUE_NAME + "'. To exit press CTRL+C ")
+	channel.start_consuming()
+except pika.exceptions.AMQPConnectionError:
+	print(" [*] Could not establish connection to '" + RABBITMQ_QUEUE_NAME + "'. Shuting down. ")
