@@ -34,6 +34,10 @@ try:
 			""" Bind label properties """
 			printer.set_property("ID", message['parameters']['code'])
 			printer.set_property("ORIGIN", message['parameters']['location_origin']['name'])
+			printer.set_property("PRODUCT_FAMILY", message['parameters']['product_type']['product_family']['name'])
+			printer.set_property("PRODUCT_TYPE", message['parameters']['product_type']['name'])
+			printer.set_property("DESTINATION", message['parameters']['location_current']['name'])
+			printer.set_property("PRODUCT", message['parameters']['packaging']['description'])
 
 			printer.send()
 
