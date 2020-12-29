@@ -7,8 +7,10 @@ Get message, behave, answer
 #!/usr/bin/env python
 import pika
 import json
-from instance.config import RABBITMQ_SERVER, RABBITMQ_QUEUE_NAME, RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD, STATION_ID
-from lib.printer.zebra.zebra import Zebra
+from instance.config import STATION_ID
+from instance.config import RABBITMQ_SERVER, RABBITMQ_QUEUE_NAME, RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD
+from instance.config import PRINTER_INTERFACE, PRINTER_IP_ADDRESS, PRINTER_PORT, PRINTER_NAME
+from lib.printer.zebra import Zebra
 
 """ Initialize connection """
 credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
@@ -29,7 +31,7 @@ try:
 		if 'target' in message and message['target'] == STATION_ID:
 			message['parameters'] = json.loads(message['parameters'])
 
-			printer = Zebra("Zebra01", "192.168.2.150", 9100)
+			printer = Zebra(PRINTER_NAME, PRINTER_IP_ADDRESS, PRINTER_PORT, PRINTER_INTERFACE)
 
 			""" Bind label properties """
 			printer.set_property("ID", message['parameters']['code'])

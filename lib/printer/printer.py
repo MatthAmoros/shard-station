@@ -1,8 +1,10 @@
 class Printer:
-	def __init__(self, name, ip_address, port):
+	def __init__(self, name, ip_address, port, interface='tcp'):
+		assert(interface in ['usb', 'tcp'])
 		self.name = str(name)
 		self.ip_address = str(ip_address)
 		self.port = port
+		self.interface = interface
 
 	def send(self):
 		raise NotImplementedError('send must be overloaded')
