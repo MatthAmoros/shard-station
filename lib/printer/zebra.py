@@ -20,64 +20,75 @@ import socket
 from lib.printer.printer import Printer
 
 class Zebra(Printer):
-	PATH_TO_LABEL = 'lib/printer/zebra/test_label_100_50.txt'
-	REPLACE_LIST = {'ID' : '1234567895',
-	 				'RECEPTION_DATE' : '10-05-2019',
-					'PRODUCT_FAMILY' : 'CHERRY',
-					'PRODUCT_TYPE' : 'SANTINA',
-					'GROWER_GROUP' : '01',
-					'ORIGIN' : 'GROWER',
-					'DESTINATION' : 'STORE',
-					'PRODUCT' : 'FRUTA GRANEL'}
+	REPLACE_LIST = {}
 
-	""" Send content to printer according to interface and parameters """
-	def send(self):
-		if self.interface == 'tcp':
-			print('Sending label to : ' + str(self.ip_address) + ':' + str(self.port) + ' ...')
-			with open(self.PATH_TO_LABEL, 'r') as content_file:
+	__content = ''
+
+	""" Send self.__content to printer according to interface and parameters """
+	def send(self, quantity=1):
+		""" Replace label tags with values """
+		populated_label_zpl = self.replace_tags(self.__content, self.REPLACE_LIST)
+		
+		printed_quantity = 0
+		while printed_quantity < quantity:
+			if self.interface == 'tcp':
+				print('Sending label to : ' + str(self.ip_address) + ':' + str(self.port) + ' ...')
 				with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-					content = content_file.read()
-					""" Replace label tags with values """
-					content = self.replace_tags(content, self.REPLACE_LIST)
-
 					s.connect((self.ip_address, self.port))
-					s.send(content.encode())
-		elif self.interface == 'usb':
-			print("Sending label through USB")
+					s.send(populated_label_zpl.encode())
+			elif self.interface == 'usb':
+				print("Sending label through USB")
 
-			with open(self.PATH_TO_LABEL, 'r') as content_file:
-				content = content_file.read()
+				if sys.version_info >= (3,):
+				  raw_data = bytes (populated_label_zpl, "utf-8")
+				else:
+				  raw_data = populated_label_zpl
 
-			if sys.version_info >= (3,):
-			  raw_data = bytes (content, "utf-8")
-			else:
-			  raw_data = content
-
-			hPrinter = win32print.OpenPrinter (self.name)
-			try:
-				hJob = win32print.StartDocPrinter (hPrinter, 1, ("Shard Label", None, "RAW"))
+				hPrinter = win32print.OpenPrinter (self.name)
 				try:
-					win32print.StartPagePrinter (hPrinter)
-					win32print.WritePrinter (hPrinter, raw_data)
-					win32print.EndPagePrinter (hPrinter)
+					hJob = win32print.StartDocPrinter (hPrinter, 1, ("Shard Label", None, "RAW"))
+					try:
+						win32print.StartPagePrinter (hPrinter)
+						win32print.WritePrinter (hPrinter, raw_data)
+						win32print.EndPagePrinter (hPrinter)
+					finally:
+						win32print.EndDocPrinter (hPrinter)
 				finally:
-					win32print.EndDocPrinter (hPrinter)
-			finally:
-				win32print.ClosePrinter (hPrinter)
-		else:
-			print("Interface not defined")
+					win32print.ClosePrinter (hPrinter)
+			else:
+				print("Interface not defined")
+
+			printed_quantity = printed_quantity + 1
 
 		print('Sent')
 
 	def set_property(self, key, value):
 		self.REPLACE_LIST[key] = value
 
+	def set_properties(self, properties):
+		for prop in properties:
+			self.REPLACE_LIST[prop] = properties[prop]
+
+	def set_label(self, label_zpl):
+		self.__content = label_zpl
+
 	def replace_tags(self, content, value_list):
 		pattern = re.compile(r"""<(?P<name>.*?)>""", re.VERBOSE)
 		matches = pattern.findall(content)
 
 		for match in matches:
-			if match in value_list:
-				content = content.replace("<" + match + ">", value_list[match])
+			try:
+				if '.' in match:
+					""" If we have a property accesor """
+					property_patch = match.split('.')
+					my_prop = value_list
+					for node in property_patch:
+						my_prop = my_prop[node]
+					content = content.replace("<" + match + ">", my_prop)
+				elif match in value_list:
+					""" Directly access property """
+					content = content.replace("<" + match + ">", value_list[match])
+			except:
+				print("Property skipped: " + str(match))
 
 		return content

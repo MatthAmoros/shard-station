@@ -1,13 +1,17 @@
 #!/usr/bin/python
 
-RABBITMQ_SERVER = "localhost"
+SHARD_ENDPOINT = "http://127.0.0.1:5000"
+SHARD_USERNAME = 'test'
+SHARD_PASSWORD = 'test'
+
+RABBITMQ_SERVER = "192.168.2.199"
 RABBITMQ_PORT = 5672
 RABBITMQ_QUEUE_NAME = "shard"
 RABBITMQ_USERNAME = "admin"
-RABBITMQ_PASSWORD = "SomePassword"
+RABBITMQ_PASSWORD = "Andinexia2017*"
 
 """ Should be a shard network wide unique ID (could be MAC address) """
-STATION_ID = 'printer-01'
+STATION_ID = 'IMP-RECEP'
 
 """ Printer configuration """
 """ usb or tcp """

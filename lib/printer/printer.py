@@ -11,3 +11,6 @@ class Printer:
 
 	def replace_tags(self, content, value_list):
 		raise NotImplementedError('replace_tags must be overloaded')
+
+	def set_properties(self, properties):
+		raise NotImplementedError('set_properties must be overloaded')
